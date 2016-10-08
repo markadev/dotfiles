@@ -1,0 +1,100 @@
+#!/usr/bin/python
+# A simple hex dump program
+
+import sys, getopt, array
+#import profile
+
+
+byte2char = '................................' + \
+            ' !"#$%&\'()*+,-./0123456789:;<=>?' + \
+            '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_' + \
+            '`abcdefghijklmnopqrstuvwxyz{|}~.' + \
+            '................................' + \
+            '................................' + \
+            '................................' + \
+            '................................'
+
+
+def hexdump(filename):
+    try:
+        f = open(filename, "rb")
+    except IOError, e:
+        sys.stderr.write(str(e) + "\n")
+        return
+
+    offset = 0
+    while True:
+        rawdata = f.read(1024)
+        rawdata_len = len(rawdata)
+        if rawdata_len == 0:
+            break
+        for i in xrange(0, rawdata_len, 16):
+            hexdump_line(offset + i, rawdata[i:i+16])
+        offset += rawdata_len
+
+def hexdump_line(offset, data):
+    if displayOffset:
+        line = "%06x: " % offset
+    else:
+        line = ""
+
+    if displayHexData:
+        bytelist = array.array('B', data).tolist()
+        bytelist_len = len(bytelist)
+        fmt = ("%02x " * bytelist_len) + ("   " * (16 - bytelist_len))
+        line += fmt % tuple(bytelist)
+
+    if displayCharData:
+        line += " <" + data.translate(byte2char) + ">"
+
+    print line
+
+
+def usage():
+    sys.stderr.write("HexDump, a simple hex dump program.\n")
+    sys.stderr.write("Usage: hd [options] <filename>\n")
+    sys.stderr.write("Options:\n")
+    sys.stderr.write("  -h    Display this usage information\n")
+    sys.stderr.write("  -o    Suppress printing of offsets\n")
+    sys.stderr.write("  -x    Suppress printing of hex data\n")
+    sys.stderr.write("  -c    Suppress printing of character data\n")
+    sys.stderr.write("\n")
+
+
+def main():
+    global displayOffset, displayHexData, displayCharData
+
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], 'hoxc')
+    except getopt.GetoptError:
+        usage()
+        sys.exit(1)
+
+    displayOffset = True
+    displayHexData = True
+    displayCharData = True
+    for o, a in opts:
+        if o == "-o":
+            displayOffset = False
+        elif o == "-x":
+            displayHexData = False
+        elif o == "-c":
+            displayCharData = False
+        elif o == "-h":
+            usage()
+            sys.exit()
+
+    if len(args) < 1:
+        usage()
+        sys.exit(1)
+
+    for fn in args:
+        hexdump(fn)
+
+
+if __name__ == '__main__':
+    #profile.run('main()')
+    main()
+
+
+# vim:set ts=4 sw=4 expandtab:

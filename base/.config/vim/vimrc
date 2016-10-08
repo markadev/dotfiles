@@ -1,0 +1,115 @@
+" Note: for gVim on windows, add an environment variable named 'VIMINIT'
+" that contains the value 'source C:\path\to\this\vimrc'.
+
+"#######
+" Options common to all VIM setups
+"#######
+set nocompatible		" Default to Vim settings instead of Vi
+
+set history=50			" 50 lines of command line history
+set ruler				" show the cursor position
+set showcmd				" display incomplete commands
+set noautoindent
+set modelines=6
+"set incsearch			" do incremental searching
+set nobackup            " don't create *~ backup files
+set ts=4
+set hlsearch
+set previewheight=6
+set wildmode=list:longest
+let c_space_errors=1
+syntax enable
+
+if has("autocmd")
+	" When editing a file, always jump to the last cursor position
+	autocmd BufReadPost * if line("'\"") | exe "'\"" | endif
+
+	" TODO To automatically save and restore views for *.c files:
+	" au BufWinLeave *.c mkview
+	" au BufWinEnter *.c silent loadview
+endif
+
+" If the TAGFILE environment variable is set, add it to the list of tag files
+if $TAGFILE != ""
+	set tags^=$TAGFILE
+endif
+
+" If the P4CLIENT environment variable is set, create a key mapping to call
+" 'p4 edit' on the current file.
+if $P4CLIENT != ""
+	map  :!p4 edit %<CR>:set noro<CR>
+endif
+
+" Color configuration
+set background=dark
+hi clear
+if exists("syntax_on")
+	syntax reset
+endif
+hi Normal     guifg=LightGray guibg=#000040
+hi Cursor     guifg=Black     guibg=Green   gui=bold
+hi StatusLine guifg=Blue      guibg=White
+hi Search     guifg=Black     guibg=Yellow
+hi Visual     guifg=bg        guibg=fg      gui=bold
+hi Directory  guifg=Blue      ctermfg=Blue
+
+hi Comment    guifg=Cyan    gui=NONE
+hi Statement  guifg=Yellow  gui=NONE
+hi Type       guifg=Green   gui=NONE
+hi Constant   guifg=Magenta gui=NONE
+hi Special    guifg=Red     gui=NONE
+hi PreProc    guifg=Blue    gui=NONE
+hi Todo       guifg=Black   guibg=Yellow
+hi Identifier guifg=Cyan    gui=NONE
+
+
+"#######
+" OS-specific options
+"#######
+if has("win32") || has("win64") || has("win95") || has("win16")
+	if isdirectory("C:/cygwin/home/".$USERNAME."/.config/vim/")
+		" Include VIM directories from my cygwin home directory
+		set runtimepath^=C:/cygwin/home/$USERNAME/.config/vim
+		set runtimepath+=C:/cygwin/home/$USERNAME/.config/vim/after
+		" TODO: set viewdir
+	endif
+
+	if $USERPROFILE != ""
+		" Include VIM directories in my windows profile
+		set runtimepath^=$USERPROFILE\vimfiles
+		set runtimepath+=$USERPROFILE\vimfiles\after
+		" Note: cygwin VIM and windows VIM can't share the viminfo file
+		" because windows VIM screws up the permissions
+		"FIXME XXX set viminfo='20,\"0,h,n$USERPROFILE\_viminfo
+	endif
+
+	highlight Normal font='Courier New'
+	source $VIMRUNTIME/mswin.vim
+	behave mswin
+else "if has("win32unix") || has("unix")
+	" Put VIM configuration under ~/.config/vim/
+	set runtimepath^=~/.config/vim
+	set runtimepath+=~/.config/vim/after
+	set viminfo='20,\"0,h,n~/.config/vim/viminfo
+	" TODO: set viewdir
+endif
+
+
+"#######
+" Options specific for gVim
+"#######
+if has("gui_running")
+	" set the window size
+	set lines=36
+	set background=dark
+endif
+
+
+"#######
+" Include machine-specific functionality
+"#######
+if $HOSTNAME != ""
+	runtime mach/$HOSTNAME.vim
+elseif $COMPUTERNAME != ""
+	runtime mach/$COMPUTERNAME.vim
+endif

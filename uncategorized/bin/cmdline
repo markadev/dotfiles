@@ -1,0 +1,11 @@
+#!/bin/sh
+
+echo -n $0
+while [ $# -gt 0 ]; do
+	echo -n " "
+	echo -n "\"$1\""
+	shift
+done
+echo
+
+sleep 5

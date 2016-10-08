@@ -1,0 +1,16 @@
+#!/bin/sh
+
+if [ $# -lt 1 ]; then
+	echo "Usage: $0 directory [directory [...]]"
+	echo "Recursively removes a directory, changing subdirectory permissions to allow it"
+	echo ""
+	exit 1
+fi
+
+while [ $# -gt 0 ]; do
+	if [ -d "$1" ]; then
+		find "$1" -type d -print0 |xargs -0r chmod u+w
+		rm -rf "$1"
+	fi
+	shift
+done

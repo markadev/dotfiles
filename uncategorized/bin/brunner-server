@@ -1,0 +1,177 @@
+#!/usr/bin/python
+
+
+import getopt, os, subprocess, sys, threading, urlparse
+from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+
+
+job_queue = []
+job_queue_lock = threading.Lock()
+job_runner_sem = threading.Semaphore()
+
+
+class HTTPException(Exception):
+    def __init__(self, code, message=None):
+        self.status_code = code
+        self.status_message = message
+
+
+class JobRequest(object):
+    def __init__(self, cmd, wd, only_after_success):
+        self.cmd = cmd
+        self.wd = wd
+        self.only_after_success = only_after_success
+
+
+class JobHTTPRequestHandler(BaseHTTPRequestHandler):
+    def address_string(self):
+        # Don't perform reverse DNS lookup
+        return str(self.client_address[0])
+
+    def version_string(self):
+        return "JobRunner/1.0"
+
+    def log_message(self, format, *args):
+        pass
+
+    def do_POST(self):
+        try:
+            if self.path == '/job':
+                self.do_POST_job()
+            else:
+                self.send_response(404)
+                self.send_header('Connection', 'close')
+                self.end_headers()
+                return
+        except HTTPException, e:
+            self.send_response(e.status_code, e.status_message)
+            self.send_header('Connection', 'close')
+            self.end_headers()
+        except Exception, e:
+            self.send_response(400)
+            self.send_header('Connection', 'close')
+            self.send_header('X-Exception', str(e))
+            self.end_headers()
+
+    def do_POST_job(self):
+        content_length = int(self.headers["content-length"])
+        if content_length > 262144:
+            raise HTTPException(400, "Request too large")
+
+        # Read the POSTed body
+        size_remaining = int(self.headers["content-length"])
+        L = []
+        while size_remaining:
+            chunk_size = min(size_remaining, 65536)
+            L.append(self.rfile.read(chunk_size))
+            size_remaining -= len(L[-1])
+        posted_data = ''.join(L)
+        del L
+
+        if self.headers["content-type"] == "application/x-www-form-urlencoded":
+            posted_args = urlparse.parse_qs(posted_data, True, True)
+        else:
+            raise HTTPException(400, "Unsupported content type")
+
+        if not 'cmd' in posted_args:
+            raise HTTPException(400, "Missing command")
+
+        if 'wd' in posted_args:
+            working_dir = posted_args['wd'][0]
+        else:
+            working_dir = os.environ['HOME']
+
+        if 'onlyAfterSuccess' in posted_args and \
+          posted_args['onlyAfterSuccess'][0] == "true":
+            only_after_success = True
+        else:
+            only_after_success = False
+        job = JobRequest(posted_args['cmd'], working_dir, only_after_success)
+
+        job_queue_lock.acquire()
+        job_queue.append(job)
+        job_queue_lock.release()
+
+        # Signal the job runner thread
+        job_runner_sem.release()
+
+        self.send_response(202)
+        #self.send_header('X-JobID', job_id)
+        self.end_headers()
+
+def pretty_arg(c):
+    if c.find(" ") == -1:
+        return c
+    else:
+        return "'"+c+"'"
+
+class JobRunningThread(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.last_command_success = True
+
+    def run(self):
+        while True:
+            # Wait to be signalled
+            job_runner_sem.acquire()
+
+            # Grab the next job
+            job_queue_lock.acquire()
+            if len(job_queue) == 0:
+                job_queue_lock.release()
+                continue
+            job = job_queue.pop(0)
+            job_queue_lock.release()
+
+            # Execute it
+            self.execute_job(job)
+
+    def execute_job(self, job):
+        pretty_cmd = " ".join([pretty_arg(a) for a in job.cmd])
+        if job.only_after_success and not self.last_command_success:
+            sys.stderr.write("==== Skipping \"%s\" ====\n" % pretty_cmd)
+            return
+
+        try:
+            sys.stderr.write("\n==== Executing \"%s\" ====\n" % pretty_cmd)
+            rc = subprocess.call(job.cmd, cwd=job.wd)
+            sys.stderr.write("==== Exit code %d ====\n" % rc)
+            self.last_command_success = (rc == 0)
+        except Exception, e:
+            sys.stderr.write("==== Execution failed: %s ====\n" % str(e))
+            self.last_command_success = False
+
+
+def main():
+    server_addr = ('127.0.0.1', 9000)
+
+    # Process command line args
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "p:", [])
+    except getopt.error, e:
+        sys.stderr.write(str(e) + "\n")
+        sys.exit(1)
+    for opt, arg in opts:
+        if opt == '-p':
+            server_addr = (server_addr[0], int(arg))
+
+    #JobHTTPRequestHandler.protocol_version = "HTTP/1.1"
+    server = HTTPServer(server_addr, JobHTTPRequestHandler)
+
+    job_thread = JobRunningThread()
+    job_thread.setDaemon(True)
+    job_thread.start()
+
+    print("Listening on %s:%d..." % server_addr)
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("Interrupted!")
+        sys.exit(0)
+
+if __name__ == '__main__':
+    main()
+
+
+
+# vim:set ts=4 sw=4 expandtab:

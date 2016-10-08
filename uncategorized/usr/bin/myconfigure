@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if [ ! "$1" ]; then
+	echo "Usage: $(basename $0) pkgname-pkgver [configure options]"
+	exit 1
+fi
+PKGID=$1
+shift
+
+./configure --prefix="${HOME}/usr/pkgs/${PKGID}" "$@"

@@ -1,0 +1,29 @@
+#!/bin/sh
+
+if [ $# -lt 1 ]; then
+	echo "noss: Disable the screensaver while running a command"
+	echo "Usage: noss command [command args]"
+	echo ""
+	exit 1
+fi
+
+KDE=0
+dcopfind kdesktop >/dev/null 2>&1
+if [ $? -eq 0 ]; then
+	KDE=1
+fi
+
+if [ ${KDE} -eq 1 ]; then
+	PREV_STATE=`dcop kdesktop KScreensaverIface isEnabled`
+	dcop kdesktop KScreensaverIface enable false >/dev/null
+else
+	xset s off
+fi
+
+"$@"
+
+if [ ${KDE} -eq 1 ]; then
+	dcop kdesktop KScreensaverIface enable ${PREV_STATE} >/dev/null
+else
+	xset s default
+fi

@@ -1,0 +1,18 @@
+#!/usr/bin/perl -w
+
+sub delinkify {
+	my ($name) = @_;
+	print "Delinkifying $name\n";
+	open FILE, $name or die "Can't open $name for reading: $!\n";
+	unlink $name or die "Can't delete $name: $!\n";
+	open DSTFILE, ">$name" or die "Can't open $name for writing: $!\n";
+	while(sysread FILE, $_, 16384) {
+		syswrite DSTFILE, $_;
+	}
+	close DSTFILE;
+	close FILE;
+}
+
+while($_ = shift @ARGV) {
+	delinkify $_ if(-l $_);
+}

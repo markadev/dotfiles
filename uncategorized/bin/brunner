@@ -1,0 +1,79 @@
+#!/usr/bin/python
+
+import getopt, httplib, os, sys, urllib
+
+
+def submit_job(server_addr, cmd, wd, onlyAfterSuccess):
+    post_args = {}
+    http_headers = {}
+
+    http_headers['Content-Type'] = "application/x-www-form-urlencoded"
+    post_args['cmd'] = cmd
+    if wd:
+        post_args['wd'] = wd
+    post_args['onlyAfterSuccess'] = str(onlyAfterSuccess).lower()
+    post_data = urllib.urlencode(post_args, True)
+
+    try:
+        conn = httplib.HTTPConnection(server_addr[0], server_addr[1])
+        conn.request("POST", "/job", post_data, http_headers)
+        response = conn.getresponse()
+
+        if response.status == 202:
+            return 0
+
+        raise Exception(response.reason)
+    except Exception, e:
+        sys.stderr.write("Failed to submit job: %s\n" % str(e))
+        return 2
+
+def usage():
+    print("""
+Usage: %s [options] <command> [arg [arg]...]
+
+Options:
+  -a            Only runs the command if the previously run command
+                was successful.
+  -C <dir>      Sets the directory to change to before running the command.
+                The default is to change to the current directory.
+  -p <port>     Sets the port number of the brunner server
+""" % sys.argv[0])
+
+def main():
+    server_addr = ('127.0.0.1', 9000)
+    wd = os.getcwd()
+    onlyAfterSuccess = False
+
+    # Process command line args
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "aC:hp:", [])
+    except getopt.error, e:
+        sys.stderr.write(str(e) + "\n")
+        usage()
+        sys.exit(1)
+    for opt, arg in opts:
+        if opt == '-a':
+            onlyAfterSuccess = True
+        elif opt == '-C':
+            wd = arg
+        elif opt == '-h':
+            usage()
+            return
+        elif opt == '-p':
+            server_addr = (server_addr[0], int(arg))
+
+    if len(args) == 0:
+        usage()
+        sys.exit(1)
+
+    rc = submit_job(server_addr, args, wd, onlyAfterSuccess)
+    if rc != 0:
+        sys.exit(rc)
+
+
+if __name__ == "__main__":
+    main()
+
+
+
+# vim:set ts=4 sw=4 expandtab:

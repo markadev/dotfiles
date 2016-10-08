@@ -1,0 +1,4 @@
+#!/bin/sh
+
+TITLE="$1"
+/bin/echo -ne "\033]0;${TITLE}\007"

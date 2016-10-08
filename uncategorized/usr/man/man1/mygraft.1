@@ -1,0 +1,426 @@
+'\" t
+.\"
+.\" $Id: mygraft.1,v 1.1 2005/11/27 16:13:01 marka Exp $
+.\"
+.TH GRAFT 1 "25 Feb 2002"
+.SH NAME
+graft \- duplicate directory trees using symbolic links
+.SH SYNOPSIS
+.B graft
+.I -i
+.RI [ -C ]
+.if 0 .RI [ -P | u ]
+.RI [ -l
+.IR log ]
+.RI [ -n ]
+.RI [ -v | V ]
+.RI [ -s | -t
+.IR target ]
+.I package package ...
+.br
+.B graft
+.I -d
+.RI [ -D ]
+.if 0 .RI [ -u ]
+.RI [ -l
+.IR log ]
+.RI [ -n ]
+.RI [ -v | V ]
+.RI [ -s | -t
+.IR target ]
+.I package package ...
+.br
+.B graft
+.I -p
+.RI [ -D ]
+.if 0 .RI [ -u ]
+.RI [ -l
+.IR log ]
+.RI [ -n ]
+.RI [ -v | V ]
+.RI [ -s | -t
+.IR target ]
+.I package package ...
+.SH DESCRIPTION
+.B graft
+duplicates a directory tree from a source location to a target
+location.
+
+.B graft
+will typically be used to duplicate the directory trees of many
+disparate packages into a single common area so that search paths can
+be minimised.
+
+Directories are created as needed. Symbolic links from target files to
+source files are created as needed. A file is considered to be anything
+that is not a directory.
+
+When installing a directory tree,
+.B graft
+will bypass a directory if it contains a file called
+.IR .nograft .
+
+When installing a directory tree,
+if a directory contains a file called
+.IR .graft-exclude ,
+.B graft
+will exclude files and/or directories from the directory if they are
+listed in the
+.I .graft-exclude
+file. The
+.I .graft-exclude
+file should contain a list of files and/or directories to be excluded,
+one file or directory name per line. Entries that do not match files
+and/or directories in the directory containing the
+.I .graft-exclude
+file will be ignored by
+.BR graft .
+The processing of
+.I .nograft
+files takes precedence over the processing of
+.I .graft-exclude
+files.
+
+When installing a directory tree,
+if a directory contains a file called
+.IR .graft-include ,
+.B graft
+will include
+.B only
+those files and/or directories listed in the
+.I .graft-include
+file. The
+.I .graft-include
+file should contain a list of files and/or directories to be included,
+one file or directory name per line. Entries that do not match files
+and/or directories in the directory containing the
+.I .graft-include
+file will be ignored by
+.BR graft .
+Note that an empty
+.I .graft-include
+file will force
+.B graft
+to behave as if the directory contained a
+.I .nograft
+file.
+The processing of
+.I .graft-exclude
+files takes precedence over the processing of
+.I .graft-include
+files.
+
+If a file or directory is listed in both a
+.I .graft-include
+and
+.I .graft-exclude
+file, it will be
+.BR excluded .
+.if 1
+.if 1 When installing a directory tree,
+.if 1 .B graft
+.if 1 will always exclude files and/or directories whose names exactly match
+.if 1 one of the following:
+.if 1
+.if 1 .in 1i
+.if 1 .I CVS RCS SCCS .svn
+.if 1 .in
+.if 1
+.if 1 The presence of a
+.if 1 .I .nograft
+.if 1 or
+.if 1 .I .graft-include
+.if 1 file overrides this feature.
+
+When installing a directory tree,
+.B graft
+will fail if it encounters a conflict. A conflict occurs when a
+target object exists and is not the same type as the source object
+according to the following table:
+
+.TS
+center;
+lB lB
+l l.
+Source Object	Target Object
+_
+directory	not a directory
+file	directory
+file	file
+file	T{
+symbolic link to something other than the source object
+T}
+.TE
+
+When deleting directory trees,
+.B graft
+will
+.B not
+fail if it encounters a conflict.
+
+When deleting directory trees,
+.B graft
+will continue to process a directory without regard to the contents of
+either a
+.I .nograft
+or a
+.I .graft-exclude
+or a
+.I .graft-include
+file.
+
+When pruning directory trees,
+.B graft
+will
+.if !1 rename
+.if 1 remove
+files and directories which will conflict with the installation of the
+package.
+.if !1 The new file name will be \fIfile.pruned\fP.
+.if 1 If the directory to be removed is not empty, it
+.if 1 will be renamed \fIdir.pruned\fP.
+
+When pruning directory trees,
+.B graft
+will continue to process a directory without regard to the contents of
+either a
+.I .nograft
+or a
+.I .graft-exclude
+or a
+.I .graft-include
+file.
+
+.B graft
+records its actions in a log file. The log file contains a time stamp,
+the
+.B graft
+version number (a trailing
+.B +
+character indicates a development version), the type of
+.B graft
+action that was performed, the package installation directory and the
+.B graft
+target directory. If a conflict arises during the processing of a
+package, another log entry will be made with a qualifying
+.B C
+character added to the type indicator. The following is an example
+extract of a
+.B graft
+log file.
+
+.TS
+center;
+l l l l l.
+878790215	1.10+	I	/pkgs/cpio-2.4.2	/pkgs
+878799501	1.10+	I	/pkgs/byteyears-1.0	/pkgs
+878888916	2.1	I	/pkgs/gzip-1.2.4	/pkgs
+878888916	2.1	IC	/pkgs/gzip-1.2.4/bin/gzip	invalid symlink
+878889045	2.1	D	/pkgs/gzip-1.2.4	/pkgs
+878889054	2.1	P	/pkgs/gzip-1.2.4	/pkgs
+878889063	2.1	I	/pkgs/gzip-1.2.4	/pkgs
+.TE
+
+This shows that a development version of
+.B graft
+(1.10+) was used to install symbolic links from
+.I /pkgs/cpio-2.4.2
+and
+.I /pkgs/byteyears-1.0
+to
+.IR /pkgs .
+A new version of
+.B graft
+(2.1) was used to install symbolic links from
+.I /pkgs/gzip-1.2.4
+to
+.IR /pkgs .
+A conflict occurred during this installation, the file
+.I /pkgs/bin/gzip
+was a symbolic link to something other than
+.IR /pkgs/gzip-1.2.4/bin/gzip .
+The package was deleted and then pruned before being re-installed
+shortly afterwards.
+.SH OPTIONS
+.TP
+.I -i
+Install the named package(s).
+.if 0 Requires super user privileges.
+Cannot be used with the
+.I -d
+or
+.I -p
+options.
+.if 1 .TP
+.if 1 .I -C
+.if 1 Disable the automatic exclusion of files and/or
+.if 1 directories whose names exactly match:
+.if 1
+.if 1 .in 1.5i
+.if 1 .I CVS RCS SCCS .svn
+.if 1 .in
+.if 1
+.if 1 Can only be used with the
+.if 1 .I -i
+.if 1 option. This option is ignored for each
+.if 1 .I grafted
+.if 1  directory, if the directory contains a
+.if 1 .I .nograft
+.if 1 or
+.if 1 .I .graft-include
+.if 1 file.
+.if !1 .TP
+.if !1 .I -C
+.if !1 Force the automatic exclusion of files and/or
+.if !1 directories whose names exactly match:
+.if !1
+.if !1 .in 1.5i
+.if !1 .I CVS RCS SCCS .svn
+.if !1 .in
+.if !1
+.if !1 Can only be used with the
+.if !1 .I -i
+.if !1 option. This option is ignored for each
+.if !1 .I grafted
+.if !1  directory, if the directory contains a
+.if !1 .I .nograft
+.if !1 or
+.if !1 .I .graft-include
+.if !1 file.
+.if 0 .TP
+.if 0 .I -P
+.if 0 .if !0 Create directories with the same
+.if 0 .if !0 owner, group and permissions as
+.if 0 .if !0 original.
+.if 0 .if 0 Do not create directories with the same
+.if 0 .if 0 owner, group and permissions as
+.if 0 .if 0 original.
+.if 0 Can only be used with the
+.if 0 .I -i
+.if 0 option.
+.if 0 Cannot be used with the
+.if 0 .I -u
+.if 0 option.
+.TP
+.I -d
+Delete the named package(s).
+.if 0 Requires super user privileges.
+Cannot be used with the
+.I -i
+or
+.I -p
+options.
+.TP
+.I -p
+Prune files that will conflict with the grafting of the named
+package(s).
+.if 0 Requires superuser privileges.
+Cannot be used with
+.I -d
+or
+-i options.
+.TP
+.I -D
+When used with the
+.I -d
+option,
+.if 1 do not remove directories made empty by package
+.if 1 deletion. When used with the \fI-p\fP option,
+.if 1 rename conflicting files or directories to
+.if 1 \fIfile.pruned\fP.
+.if !1 remove directories made empty by package
+.if !1 deletion. When used with the \fI-p\fP option,
+.if !1 remove conflicting files or directories instead
+.if !1 of renaming them as \fIfile.pruned\fP. If the
+.if !1 directory is not empty it will be renamed as
+.if !1 \fIdir.pruned\fP.
+Cannot be used with the
+.I -i
+option.
+.if 0 .TP
+.if 0 .I -u
+.if 0 Superuser privileges are not required to install,
+.if 0 delete or prune packages. Cannot be used with the
+.if 0 .I -P
+.if 0 option.
+.TP
+.I -l log
+Use the named file as the log file instead of the default log file. The
+log file name must be fully qualified. The log file is not used if the
+.I -n
+option is also supplied. Default:
+.B $ENV{HOME}/usr/graft.log
+.TP
+.I -n
+Print a list of operations but do NOT perform them. Automatically
+implies the very verbose option.
+.if 0 Does not require superuser privileges.
+.TP
+.I -v
+Be verbose.
+.TP
+.I -V
+Be very verbose.
+.TP
+.I -s
+Stow/Depot compatibility mode. Infer the
+.B graft
+target directory from
+each package installation directory in the manner of
+.B Stow and
+.BR Depot .
+Cannot be used with the
+.I -t
+option.
+.TP
+.I -t target
+Use the named directory as the
+.B graft
+target directory rather than the
+default target directory. The target directory must be fully
+qualified. Cannot be used with the
+.I -s
+option. Default:
+.B $ENV{HOME}/usr
+.TP
+.I package ...
+Operate on the named package(s). If the package name is not fully
+qualified, the default package installation directory will be prepended
+to the named package. Default:
+.B $ENV{HOME}/usr/pkgs
+.SH EXIT STATUS
+.B graft
+will terminate with an exit status of either 0, 1, 2 or 3 under the
+following conditions:
+
+.TS
+center;
+cB cB
+c lw(3c).
+Exit Status	Condition
+_
+0	All operations succeeded.
+1	A conflict occurred during installation.
+2	Command line syntax was incorrect.
+3	T{
+One or more packages listed on the command line does not exist. Other
+valid packages listed on the command line were processed correctly.
+T}
+.TE
+.SH VERSION
+Version 2.4
+.SH AUTHOR
+Peter Samuel, Gormand Pty Ptd
+.br
+<peters@gormand.com.au>
+.SH LICENSE
+.B graft
+is licensed under the terms of the
+.I GNU General Public License, Version 2, June 1991.
+.SH AVAILABILITY
+The latest version of
+.B graft
+should always be available from
+.I http://www.gormand.com.au/peters/tools/
+.SH SEE ALSO
+.I Graft - a package management utility

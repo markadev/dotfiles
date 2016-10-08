@@ -1,0 +1,21 @@
+#!/bin/sh
+
+if [ $# -lt 1 ]; then
+	echo "$0 - Check for duplicate symbols in .o and .a files"
+	echo ""
+	echo "Usage: $0 file [file [file...]]"
+	exit 1
+fi
+
+TMPFILE=/tmp/chkdupsyms-$$.txt
+rm -f ${TMPFILE} || exit 1
+echo > ${TMPFILE} || exit 1
+
+while [ $# -gt 0 ]; do
+	nm $1 |egrep "[0-9a-f]{8} T" |cut -d ' ' -f 3 >> ${TMPFILE}
+	shift
+done
+ 
+cat ${TMPFILE} |sort |uniq -d
+
+rm ${TMPFILE}

@@ -1,0 +1,40 @@
+#!/bin/sh
+# Fuck cpio
+
+usage() {
+	echo "Usage: $0 [-x] [-l] file.cpio"
+	echo "Description: Unpack a cpio file"
+	echo ""
+	echo "Options:"
+	echo "  -x       Extract the contents of a CPIO file"
+	echo "  -l       List the contents of a CPIO file"
+	echo ""
+	exit 1
+}
+
+OPTIONS=""
+while [ $# -gt 0 ]; do
+	case $1 in
+	-x)
+		OPTIONS="--extract --make-directories -u"
+		;;
+	-l)
+		OPTIONS="--list"
+		;;
+	-*)
+		echo "Unknown option '$1'"
+		usage
+		;;
+	*)
+		break
+		;;
+	esac
+	shift
+done
+
+if [ $# -ne 1 -o -z "${OPTIONS}" ]; then
+	usage
+fi
+
+#echo "cpio ${OPTIONS} < $1"
+cpio ${OPTIONS} < $1

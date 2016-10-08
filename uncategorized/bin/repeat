@@ -1,0 +1,22 @@
+#!/bin/sh
+# Repeatedly execute a command until it fails
+
+if [ $# -lt 1 ]; then
+    echo "Usage: repeat <command> [args...]"
+    exit 1
+fi
+
+rc=0
+count=0
+
+date
+while [ ${rc} -eq 0 ]; do
+    count=$((${count} + 1))
+    echo -n "${count}: "
+    "$@"
+    rc=$?
+    echo ""
+done
+date
+
+exit ${rc}

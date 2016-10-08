@@ -1,0 +1,107 @@
+#!/bin/bash
+# Create a tree of symlinks that point to files in a parallel tree
+
+
+usage() {
+	echo ""
+	echo "Create a tree of symlinks that point to files in a parallel tree"
+	echo "Usage:"
+	echo "    $0 [OPTIONS] <srcdir> <destdir>"
+	echo ""
+	echo "Options:"
+	echo "    --relative    Create relative symlinks using '..'"
+	echo "    --debug       Enable debug output"
+	echo ""
+}
+
+# Parse command line args
+RELATIVE=0
+while [ $# -gt 0 ]; do
+	case $1 in
+	--relative|--rel)
+		RELATIVE=1
+		;;
+	--debug)
+		DEBUGPRINT=1
+		;;
+	--help)
+		usage
+		exit 0
+		;;
+	-*)
+		usage
+		exit 1
+		;;
+	*)
+		break
+		;;
+	esac
+	shift
+done
+
+if [ $# -ne 2 ]; then
+	usage
+	exit 1
+fi
+
+SRCDIR="$1"
+DSTDIR="$2"
+
+echo "Linking ${SRCDIR} to ${DSTDIR}"
+
+# Get the real absolute source directory and verify that it exists
+REALSRCDIR=$(cd ${SRCDIR} && pwd -P) || exit 1
+test "${DEBUGPRINT}" && echo "REALSRCDIR=${REALSRCDIR}"
+
+# Create the destination directory structure
+find "${REALSRCDIR}" -type d -printf "${DSTDIR}/%P\0" |xargs -r0 mkdir -p
+
+REALDSTDIR=$(cd ${DSTDIR} && pwd -P) || exit 1
+test "${DEBUGPRINT}" && echo "REALDSTDIR=${REALDSTDIR}"
+
+if [ ${RELATIVE} = 0 ]; then
+	# Create absolute symlinks
+	find "${REALSRCDIR}" -type f -printf "%p\0${REALDSTDIR}/%P\0" |xargs -0n2 ln -sf
+	exit 0
+fi
+
+# Create relative symlinks using ..
+
+# Calculate the relative path from the destination to source directory
+### First, calculate the common root of the source and destination
+### directories and remove it.
+I=1
+S="/"
+D="/"
+COMMONROOT=""
+while [ "${S}" = "${D}" ]; do
+	COMMONROOT="${S}"
+	I=$(expr ${I} + 1)
+	S=$(echo ${REALSRCDIR} | cut -d/ -f1-${I})
+	D=$(echo ${REALDSTDIR} | cut -d/ -f1-${I})
+done
+test "${DEBUGPRINT}" && echo "I=${I}"
+test "${DEBUGPRINT}" && echo "COMMONROOT=${COMMONROOT}"
+RELSRCDIR=$(echo ${REALSRCDIR} | sed -e "s:^${COMMONROOT}/\?::")
+RELDSTDIR=$(echo ${REALDSTDIR} | sed -e "s:^${COMMONROOT}/\?::")
+test "${DEBUGPRINT}" && echo "RELSRCDIR=${RELSRCDIR}"
+test "${DEBUGPRINT}" && echo "RELDSTDIR=${RELDSTDIR}"
+
+### Second, prepend an appropriate number of .. components to get from the
+### destination directory to the common root
+DOTS=$(echo "${RELDSTDIR}" | sed -e 's:[^/]\+:..:g')
+test "${DEBUGPRINT}" && echo "DOTS=${DOTS}"
+
+
+# Now we have all the non-file related information we need to create
+# symlinks named ${REALDSTDIR}/${SUBDIR}/${F} that point to
+# ${DOTS}/${F_DOTS}/${RELSRCDIR}/${F}
+
+for F in $(cd "${REALSRCDIR}" && find . -type f -printf "%P\n"); do
+	F_DOTS=`dirname $F`
+	if [ "${F_DOTS}" != "." ]; then
+		F_DOTS=$(echo ${F_DOTS} | sed -e 's:[^/]\+:..:g')
+	fi
+	test "${DEBUGPRINT}" && echo "${REALDSTDIR}/${SUBDIR}/${F} -> ${DOTS}/${F_DOTS}/${RELSRCDIR}/${F}"
+	ln -sf "${DOTS}/${F_DOTS}/${RELSRCDIR}/${F}" "${REALDSTDIR}/${SUBDIR}/${F}"
+done

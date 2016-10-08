@@ -1,0 +1,13 @@
+#!/bin/sh
+
+if [ $# -lt 1 ]; then
+	echo "lcase - Rename a file to all lowercase characters"
+	echo "Usage: lcase [filename] [filename...]"
+	exit 1
+fi
+
+FILES="$*"
+for F in ${FILES}; do
+	LF=`echo $F | tr "[A-Z]" "[a-z]"`
+	mv $F ${LF}
+done

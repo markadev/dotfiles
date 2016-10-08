@@ -1,0 +1,10 @@
+#!/bin/sh
+
+FILE=/home/marka/.project
+TMPFILE=/home/marka/.tmpfile
+QUOTEPROG="/usr/local/bin/fortune /home/marka/data/fortune"
+
+awk '{print $0} /QOTH:/ {exit}' $FILE > $TMPFILE || exit 1
+$QUOTEPROG >> $TMPFILE || exit 1
+chmod 0644 $TMPFILE
+mv -f $TMPFILE $FILE

@@ -1,0 +1,36 @@
+#!/usr/bin/python
+
+import sys, time
+
+
+
+def usage():
+    print("Usage: str2unixtime <pattern> <timestring>")
+    print("\nPattern format directives:")
+    print("  %d  - Day of the month as a decimal number [01,31].")
+    print("  %H  - Hour (24-hour clock) as a decimal number [00,23].")
+    print("  %m  - Month as a decimal number [01,12].")
+    print("  %M  - Minute as a decimal number [00,59].")
+    print("  %S  - Second as a decimal number [00,61].")
+    print("  %y  - Year without century as a decimal number [00,99].")
+    print("  %Y  - Year with century as a decimal number.")
+    print("  %m  - Month as a decimal number [01,12].")
+    print("  %Z  - Time zone name (no characters if no time zone exists).")
+    print("")
+
+def main():
+    if len(sys.argv) < 3:
+        usage()
+        sys.exit(1)
+
+    pattern = sys.argv[1]
+    timestring = sys.argv[2]
+    timetuple = time.strptime(timestring, pattern)
+    print time.mktime(timetuple)
+
+
+if __name__ == "__main__":
+    main()
+
+
+# vim:set ts=4 sw=4 expandtab:

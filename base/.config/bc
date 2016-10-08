@@ -1,0 +1,68 @@
+scale=10
+
+/* Functions for computing compound interest */
+define compound_interest_monthly(value, rate, numyears) {
+	return value * ((1 + rate/12) ^ (numyears * 12))
+}
+
+define compound_interest_yearly(value, rate, numyears) {
+	return value * ((1 + rate) ^ numyears)
+}
+
+/* Logarithm
+ * http://www.play-hookey.com/ac_theory/logarithms.html
+ */
+define log2(value) {
+	auto result ;
+	while(value >= 2.0) {
+		result = result + 1.0
+		value = value / 2.0
+	}
+	/* TODO: calculate out to 'scale' decimal places */
+	return result
+}
+
+/* Round to the nearest dollar */
+define round(value) {
+	auto cents, s ;
+
+	{ s = scale; scale = 0; cents = value % 1.00; scale = s; }
+
+	if(cents >= 0.50) {
+		return value + (1.00 - cents);
+	} else {
+		return value - cents;
+	}
+}
+
+/* Requires invocation with the -l option for the math library */
+define ln(value)
+{
+    return l(value)
+}
+
+define logn(base, value)
+{
+    return (l(value) / l(base))
+}
+
+define min(a, b)
+{
+    if(a < b) {
+        return a;
+    } else {
+        return b;
+    }
+}
+
+define max(a, b)
+{
+    if(a > b) {
+        return a;
+    } else {
+        return b;
+    }
+}
+
+
+/* vim:set syntax=bc: */

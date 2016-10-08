@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# Take ownership of a file
+# Requires write permission in the directory and read permission on the file
+
+TMPNAME=take-$$-`date +%Y%m%d`
+
+if [ $# -lt 1 ]; then
+	echo "take: Take ownership of file(s)"
+	echo
+	echo "Requires write permission in the directory and read permission on the file"
+	echo
+	exit 1
+fi
+
+while [ $# -gt 0 ]; do
+	D=`dirname $1`
+	F=$1
+	#echo $F
+	shift
+	[ -r $F ] || continue
+	ln $F $D/$TMPNAME || exit 1
+	rm -f $F || exit 1
+	cp $D/$TMPNAME $F || exit 1
+	rm -f $D/$TMPNAME || exit 1
+done
