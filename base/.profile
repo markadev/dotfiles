@@ -1,10 +1,6 @@
 # Executed when logging in
 #echo ".profile"
 
-# Cygwin Note:
-#   mkpasswd -l -c -g -p /home > /etc/passwd
-#   mkgroup -l -c > /etc/group
-
 umask 022
 
 export CONFIG="${HOME}/.config"
