@@ -12,13 +12,15 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Symlink dotfiles into place')
     parser.add_argument('pkg_dir', nargs='*',
         help='Name of a directory to symlink')
+    parser.add_argument('-v', '--verbose', action='store_true',
+        help='Enable verbose debug loggin')
     return parser.parse_args()
 
 
 def main():
-    logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(message)s')
-
     args = parse_args()
+    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO,
+        format='%(levelname)s:%(message)s')
     try:
         home_dir = os.environ['HOME']
     except KeyError:
