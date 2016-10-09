@@ -12,7 +12,6 @@ for F in ${CONFIG}/profile.d/*.sh; do
 done
 
 export VIMINIT="source ${CONFIG}/vim/vimrc"
-export SCREENRC="${CONFIG}/screenrc"
 export EDITOR=/usr/bin/vim
 export HOSTNAME=`hostname -s`
 
