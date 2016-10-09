@@ -18,9 +18,19 @@ unset IGNOREEOF MAILCHECK PROMPT_COMMAND
 unset command_not_found_handle
 export PS1="\h> "
 
+
+case "${OSTYPE}" in
+linux-*)
+	alias ls="ls --color=auto"
+	;;
+darwin*)
+	export CLICOLOR=1
+	;;
+esac
+
+
 case "${HOSTNAME}" in
 cactus-vm)
-	alias ls="ls --color=auto"
 	. virtualenvwrapper.sh
 	. ${CONFIG}/bash/marks.sh
 	. ${CONFIG}/bash/todo.sh
