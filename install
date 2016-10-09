@@ -4,16 +4,16 @@ from __future__ import unicode_literals
 import argparse, logging, os, pkg_resources
 
 
-DEFAULT_PKG_DIRS = ['base', 'bc']
+DEFAULT_ROLES = ['base', 'bc']
 logger = logging.getLogger('install')
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Symlink dotfiles into place')
-    parser.add_argument('pkg_dir', nargs='*',
+    parser.add_argument('role', nargs='*',
         help='Name of a directory to symlink')
     parser.add_argument('-v', '--verbose', action='store_true',
-        help='Enable verbose debug loggin')
+        help='Enable verbose debug logging')
     return parser.parse_args()
 
 
@@ -22,7 +22,7 @@ def main():
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO,
         format='%(levelname)s:%(message)s')
     try:
-        home_dir = os.environ['HOME']
+        home_dir = os.environ['HOME'].rstrip('/')
     except KeyError:
         logger.error("'HOME' environment variable is not set")
         raise SystemExit(2)
@@ -36,12 +36,12 @@ def main():
         raise SystemExit(2)
     logger.debug("script_dir=%s", script_dir)
 
-    pkg_dirs = args.pkg_dir if args.pkg_dir else DEFAULT_PKG_DIRS
-    logger.debug("pkg_dirs=%s", pkg_dirs)
+    roles = args.role if args.role else DEFAULT_ROLES
+    logger.debug("roles=%s", roles)
 
     try:
-        for pkg_dir in pkg_dirs:
-            symlink_dir(os.path.join(script_dir, pkg_dir), home_dir)
+        for role in roles:
+            symlink_dir(os.path.join(script_dir, role), home_dir)
     except OSError as e:
         logger.error(e.strerror)
         raise SystemExit(3)
