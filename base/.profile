@@ -4,10 +4,15 @@
 umask 022
 
 export CONFIG="${HOME}/.config"
-export BC_ENV_ARGS="${CONFIG}/bc"
+export LESSHISTFILE=-
+
+# Include our profile parts
+for F in ${CONFIG}/profile.d/*.sh; do
+	if [ -r "$F" ]; then . "$F"; fi
+done
+
 export VIMINIT="source ${CONFIG}/vim/vimrc"
 export SCREENRC="${CONFIG}/screenrc"
-export LESSHISTFILE=-
 export EDITOR=/usr/bin/vim
 export HOSTNAME=`hostname -s`
 

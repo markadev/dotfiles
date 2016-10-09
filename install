@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import argparse, logging, os, pkg_resources
 
 
-DEFAULT_PKG_DIRS = ['base']
+DEFAULT_PKG_DIRS = ['base', 'bc']
 logger = logging.getLogger('install')
 
 
@@ -91,7 +91,7 @@ def symlink_dir(source_dir, dest_dir):
         if os.path.isdir(src_path):
             safe_mkdir(dest_path)
             symlink_dir(src_path, dest_path)
-        else:
+        elif fname != '.keep':
             safe_symlink(src_path, dest_path)
 
 

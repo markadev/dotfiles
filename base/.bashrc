@@ -1,10 +1,12 @@
 # Executed when an interactive bash shell is opened or bash is invoked remotely
 #echo ".bashrc"
 
-# Source .profile if it hasn't been sources (scp or ssh running a command)
-if [ -z "${CONFIG}" ]; then
-	. ${HOME}/.profile
-fi
+# Source .profile if it hasn't been sourced. This happens when bash is invoked
+# from scp or ssh running a single command
+[ -n "${CONFIG}" ] || source "${HOME}/.profile"
+
+# If not running interactively, don't do anything
+[ -z "${PS1}" ] && return
 
 # Command aliases
 alias bgrep="grep --exclude='*.[ado]' --exclude='tags' --exclude-dir='.svn' --exclude-dir='.git'"
