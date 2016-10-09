@@ -9,10 +9,9 @@
 [ -z "${PS1}" ] && return
 
 # Command aliases
-alias bgrep="grep --exclude='*.[ado]' --exclude='tags' --exclude-dir='.svn' --exclude-dir='.git'"
+alias bgrep="grep --exclude='*.[ado]' --exclude='*.pyc' --exclude='tags' --exclude-dir='.svn' --exclude-dir='.git'"
 alias nohist="export HISTFILE=/dev/null"
 
-complete -f -X '*.o' vi vim
 complete -d cd pushd
 
 # Shell variables

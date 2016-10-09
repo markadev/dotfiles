@@ -11,8 +11,6 @@ for F in ${CONFIG}/profile.d/*.sh; do
 	if [ -r "$F" ]; then . "$F"; fi
 done
 
-export VIMINIT="source ${CONFIG}/vim/vimrc"
-export EDITOR=/usr/bin/vim
 export HOSTNAME=`hostname -s`
 
 case `uname` in
