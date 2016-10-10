@@ -29,19 +29,23 @@ def main():
     logger.debug("home_dir=%s", home_dir)
 
     try:
-        script_dir = pkg_resources.resource_filename(__name__, '')
-        script_dir = os.path.abspath(script_dir or '.')
+        dotfile_basepath = pkg_resources.resource_filename(__name__, '')
+        dotfile_basepath = os.path.abspath(dotfile_basepath or '.')
     except:
         logger.exception("Unable to determine script directory")
         raise SystemExit(2)
-    logger.debug("script_dir=%s", script_dir)
+    logger.debug("dotfile_basepath=%s", dotfile_basepath)
 
     roles = args.role
     logger.debug("roles=%s", roles)
 
     try:
+        logger.info("Symlinking roles...")
         for role in roles:
-            symlink_dir(os.path.join(script_dir, role), home_dir)
+            symlink_dir(os.path.join(dotfile_basepath, role), home_dir)
+
+        logger.info("Pruning stale symlinks...")
+        prune_links(home_dir, dotfile_basepath)
     except OSError as e:
         logger.error(e.strerror)
         raise SystemExit(3)
@@ -84,6 +88,16 @@ def safe_symlink(src, dest):
             dest, e.message))
 
 
+def safe_remove_symlink(path):
+    """Removes the file at the specified path"""
+    logger.info("RM %s", path)
+    try:
+        os.remove(path)
+    except OSError as e:
+        raise RuntimeError("Could not remove symlink '{}': {}".format(
+            path, e.strerror))
+
+
 def symlink_dir(source_dir, dest_dir):
     for fname in os.listdir(source_dir):
         src_path = os.path.join(source_dir, fname)
@@ -93,6 +107,31 @@ def symlink_dir(source_dir, dest_dir):
             symlink_dir(src_path, dest_path)
         elif fname != '.keep':
             safe_symlink(src_path, dest_path)
+
+
+def prune_links(path, dotfile_basepath, expected_roles=None):
+    """
+    Recursively search `path` looking for dotfile symlinks and
+    removing them.
+    """
+    dotfile_basepath += '/'  # Ensure ends with a '/'
+    for root, dirs, files in os.walk(path):
+        file_paths = (os.path.join(root, f) for f in files)
+        symlink_paths = (fp for fp in file_paths if os.path.islink(fp))
+        for symlink_path in symlink_paths:
+            link_target = os.readlink(symlink_path)
+            if not link_target.startswith(dotfile_basepath):
+                continue
+
+            if not os.path.exists(link_target):
+                # Remove stale links
+                safe_remove_symlink(symlink_path)
+            elif expected_roles is not None:
+                # Remove links to roles no longer wanted
+                role, _ = link_target[len(dotfile_basepath):].split(
+                    os.path.sep, 1)
+                if role not in expected_roles:
+                    safe_remove_symlink(symlink_path)
 
 
 if __name__ == '__main__':
