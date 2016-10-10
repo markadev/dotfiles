@@ -17,6 +17,8 @@ Linux)
 	export PATH="${HOME}/.local/bin:${PATH}"
 	;;
 Darwin)
+	# Python path
+	export PATH="${HOME}/Library/Python/2.7/bin:${PATH}"
 	;;
 esac
 
