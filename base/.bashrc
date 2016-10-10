@@ -27,9 +27,6 @@ done
 
 
 case "${OSTYPE}" in
-linux-*)
-	alias ls="ls --color=auto"
-	;;
 darwin*)
 	export CLICOLOR=1
 	;;

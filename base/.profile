@@ -11,6 +11,7 @@ for F in ${CONFIG}/profile.d/*.sh; do
 	if [ -r "$F" ]; then . "$F"; fi
 done
 
+# XXX get rid of this, but I think vim config depends on it ATM
 export HOSTNAME=`hostname -s`
 
 case `uname` in
@@ -23,18 +24,6 @@ Darwin)
 esac
 
 export PATH="${HOME}/bin:${PATH}"
-
-# Host specific options
-case "${HOSTNAME}" in
-cactus-vm)
-	export SSL_CERT_DIR="/etc/ssl/certs:${HOME}/.config/certs"
-	export SSH_ASKPASS="/usr/bin/x11-ssh-askpass"
-	#. ${CONFIG}/bash/ssh-agent.sh
-	;;
-*)
-	;;
-esac
-
 
 if [ "${PS1}" -a "${BASH_VERSION}" ]; then
 	# We're running an interactive bash shell
