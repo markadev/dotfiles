@@ -31,12 +31,3 @@ darwin*)
 	export CLICOLOR=1
 	;;
 esac
-
-
-case "${HOSTNAME}" in
-cactus-vm)
-	. virtualenvwrapper.sh
-	;;
-*)
-	;;
-esac
