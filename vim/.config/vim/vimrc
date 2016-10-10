@@ -108,8 +108,4 @@ endif
 "#######
 " Include machine-specific functionality
 "#######
-if $HOSTNAME != ""
-	runtime mach/$HOSTNAME.vim
-elseif $COMPUTERNAME != ""
-	runtime mach/$COMPUTERNAME.vim
-endif
+runtime localconfig.vim

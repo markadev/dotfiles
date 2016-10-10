@@ -11,9 +11,6 @@ for F in ${CONFIG}/profile.d/*.sh; do
 	if [ -r "$F" ]; then . "$F"; fi
 done
 
-# XXX get rid of this, but I think vim config depends on it ATM
-export HOSTNAME=`hostname -s`
-
 case `uname` in
 Linux)
 	# Python path

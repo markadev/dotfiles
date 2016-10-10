@@ -10,7 +10,7 @@ logger = logging.getLogger('install')
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Symlink dotfiles into place')
-    parser.add_argument('role', nargs='*',
+    parser.add_argument('role', nargs='+',
         help='Name of a directory to symlink')
     parser.add_argument('-v', '--verbose', action='store_true',
         help='Enable verbose debug logging')
@@ -36,7 +36,7 @@ def main():
         raise SystemExit(2)
     logger.debug("script_dir=%s", script_dir)
 
-    roles = args.role if args.role else DEFAULT_ROLES
+    roles = args.role
     logger.debug("roles=%s", roles)
 
     try:
