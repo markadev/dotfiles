@@ -36,7 +36,6 @@ esac
 case "${HOSTNAME}" in
 cactus-vm)
 	. virtualenvwrapper.sh
-	. ${CONFIG}/bash/todo.sh
 	;;
 *)
 	;;
