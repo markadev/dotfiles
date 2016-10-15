@@ -1,0 +1,74 @@
+#!/usr/bin/env python2
+# A simple hex dump program
+
+from __future__ import unicode_literals
+import argparse
+import sys
+
+
+byte_to_ascii = '................................' + \
+                ' !"#$%&\'()*+,-./0123456789:;<=>?' + \
+                '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_' + \
+                '`abcdefghijklmnopqrstuvwxyz{|}~.' + \
+                '................................' + \
+                '................................' + \
+                '................................' + \
+                '................................'
+
+
+def hexdump(fp, args):
+    offset = 0
+    while True:
+        rawdata = fp.read(1024)
+        rawdata_len = len(rawdata)
+        if rawdata_len == 0:
+            break
+        for i in xrange(0, rawdata_len, 16):
+            hexdump_line(offset + i, rawdata[i:i+16], args)
+        offset += rawdata_len
+
+
+def hexdump_line(offset, data, args):
+    if args.display_offset:
+        line = "%06x: " % offset
+    else:
+        line = ""
+
+    if args.display_hex_data:
+        formatted_bytes = ["{:02x}".format(ord(b)) for b in data]
+        formatted_bytes += ['  ' for _ in xrange(len(data), 16)]
+        line += ' '.join(formatted_bytes)
+
+    if args.display_ascii_data:
+        line += "  <" + data.translate(byte_to_ascii) + ">"
+
+    print(line)
+
+
+def parse_args():
+    parser = argparse.ArgumentParser('A simple hex dump program')
+    parser.add_argument('-c', dest='display_ascii_data', action='store_false',
+        help='Suppress printing of data in ASCII form')
+    parser.add_argument('-o', dest='display_offset', action='store_false',
+        help='Suppress printing of offsets')
+    parser.add_argument('-x', dest='display_hex_data', action='store_false',
+        help='Suppress printing of hex data')
+    parser.add_argument('filename', nargs='+',
+        help='Name of the file to dump')
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+    try:
+        for filename in args.filename:
+            fp = open(filename, 'rb')
+            hexdump(fp, args)
+            fp.close()
+    except IOError as e:
+        sys.stderr.write("{}\n".format(e))
+        raise SystemExit(2)
+
+
+if __name__ == '__main__':
+    main()
