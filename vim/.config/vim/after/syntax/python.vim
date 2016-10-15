@@ -14,3 +14,6 @@ highlight redundantSpaces ctermbg=Red guibg=Red
 syn sync fromstart
 set foldmethod=syntax
 set foldlevel=99
+
+" Never use tab characters
+set expandtab
