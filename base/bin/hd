@@ -46,7 +46,7 @@ def hexdump_line(offset, data, args):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser('A simple hex dump program')
+    parser = argparse.ArgumentParser(description='A simple hex dump program')
     parser.add_argument('-c', dest='display_ascii_data', action='store_false',
         help='Suppress printing of data in ASCII form')
     parser.add_argument('-o', dest='display_offset', action='store_false',
