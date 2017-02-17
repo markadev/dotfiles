@@ -2,6 +2,24 @@
 " that contains the value 'source C:\path\to\this\vimrc'.
 
 "#######
+" Update the VIM runtimepath
+"#######
+if has("win32") || has("win64") || has("win95") || has("win16")
+	if $USERPROFILE != ""
+		" Include VIM directories in my windows profile
+		set runtimepath^=$USERPROFILE\vimfiles
+		set runtimepath+=$USERPROFILE\vimfiles\after
+		"FIXME XXX set viminfo='20,\"0,h,n$USERPROFILE\_viminfo
+	endif
+else "if has("win32unix") || has("unix")
+	" Put VIM configuration under ~/.config/vim/
+	set runtimepath^=~/.config/vim
+	set runtimepath+=~/.config/vim/after
+	set viminfo='20,\"0,h,n~/.config/vim/viminfo
+endif
+
+
+"#######
 " Options common to all VIM setups
 "#######
 set nocompatible		" Default to Vim settings instead of Vi
@@ -68,31 +86,9 @@ hi Identifier guifg=Cyan    gui=NONE
 " OS-specific options
 "#######
 if has("win32") || has("win64") || has("win95") || has("win16")
-	if isdirectory("C:/cygwin/home/".$USERNAME."/.config/vim/")
-		" Include VIM directories from my cygwin home directory
-		set runtimepath^=C:/cygwin/home/$USERNAME/.config/vim
-		set runtimepath+=C:/cygwin/home/$USERNAME/.config/vim/after
-		" TODO: set viewdir
-	endif
-
-	if $USERPROFILE != ""
-		" Include VIM directories in my windows profile
-		set runtimepath^=$USERPROFILE\vimfiles
-		set runtimepath+=$USERPROFILE\vimfiles\after
-		" Note: cygwin VIM and windows VIM can't share the viminfo file
-		" because windows VIM screws up the permissions
-		"FIXME XXX set viminfo='20,\"0,h,n$USERPROFILE\_viminfo
-	endif
-
 	highlight Normal font='Courier New'
 	source $VIMRUNTIME/mswin.vim
 	behave mswin
-else "if has("win32unix") || has("unix")
-	" Put VIM configuration under ~/.config/vim/
-	set runtimepath^=~/.config/vim
-	set runtimepath+=~/.config/vim/after
-	set viminfo='20,\"0,h,n~/.config/vim/viminfo
-	" TODO: set viewdir
 endif
 
 
