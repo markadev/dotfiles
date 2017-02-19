@@ -1,24 +1,3 @@
-" Note: for gVim on windows, add an environment variable named 'VIMINIT'
-" that contains the value 'source C:\path\to\this\vimrc'.
-
-"#######
-" Update the VIM runtimepath
-"#######
-if has("win32") || has("win64") || has("win95") || has("win16")
-	if $USERPROFILE != ""
-		" Include VIM directories in my windows profile
-		set runtimepath^=$USERPROFILE\vimfiles
-		set runtimepath+=$USERPROFILE\vimfiles\after
-		"FIXME XXX set viminfo='20,\"0,h,n$USERPROFILE\_viminfo
-	endif
-else "if has("win32unix") || has("unix")
-	" Put VIM configuration under ~/.config/vim/
-	set runtimepath^=~/.config/vim
-	set runtimepath+=~/.config/vim/after
-	set viminfo='20,\"0,h,n~/.config/vim/viminfo
-endif
-
-
 "#######
 " Options common to all VIM setups
 "#######
@@ -29,7 +8,6 @@ set ruler				" show the cursor position
 set showcmd				" display incomplete commands
 set noautoindent
 set modelines=6
-"set incsearch			" do incremental searching
 set nobackup            " don't create *~ backup files
 set ts=4
 set sw=4
@@ -55,9 +33,9 @@ endif
 
 " If the P4CLIENT environment variable is set, create a key mapping to call
 " 'p4 edit' on the current file.
-if $P4CLIENT != ""
-	map  :!p4 edit %<CR>:set noro<CR>
-endif
+"if $P4CLIENT != ""
+"	map  :!p4 edit %<CR>:set noro<CR>
+"endif
 
 " Color configuration
 set background=dark
@@ -85,7 +63,7 @@ hi Identifier guifg=Cyan    gui=NONE
 "#######
 " OS-specific options
 "#######
-if has("win32") || has("win64") || has("win95") || has("win16")
+if has("win32") || has("win64")
 	highlight Normal font='Courier New'
 	source $VIMRUNTIME/mswin.vim
 	behave mswin
