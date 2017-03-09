@@ -8,5 +8,5 @@ npvenv()
     . ${HOME}/src/platform-core/npvenv/bin/activate
 }
 
-alias bgrep="grep --exclude='*.pyc' --exclude='tags' --exclude-dir='.git' --exclude-dir='.build' --exclude-dir='.venv' --exclude-dir='npvenv'"
+alias bgrep="grep --exclude='*.pyc' --exclude='tags' --exclude-dir='.git' --exclude-dir='.build' --exclude-dir='.venv' --exclude-dir='npvenv' --exclude-dir='.terraform' --exclude-dir=.tox"
 alias ecr_login="aws --region=us-east-1 ecr get-login |sh"

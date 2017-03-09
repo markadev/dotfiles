@@ -6,3 +6,6 @@ for tf in [ 'tags','../tags','../../tags','../../../tags','../../../../tags','..
         break
     endif
 endfor
+
+" Set terraform syntax used here. Allow '-' in words for much easier symbol searching
+autocmd Filetype terraform setlocal iskeyword+=- ts=2 sw=2 expandtab
