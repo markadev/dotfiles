@@ -2,6 +2,7 @@ export PS1="\u@\h:\w\$ "
 export CLICOLOR=1
 export PGHOST="127.0.0.1"
 export PGUSER="postgres"
+export PATH="${PATH}:/usr/local/opt/postgresql@9.4/bin"
 
 npvenv()
 {

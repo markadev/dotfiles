@@ -1,0 +1,147 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+from io import StringIO
+from subprocess import check_call, Popen, PIPE
+
+
+REPO_URLS = [
+    ('git@github.com:Cloudlock/ccs-client-library.git',),
+    ('git@github.com:Cloudlock/continuous-integration.git',),
+    ('git@github.com:Cloudlock/csf-afw.git',),
+    ('git@github.com:Cloudlock/csf-api.git',),
+    ('git@github.com:Cloudlock/csf-ctr.git',),
+    ('git@github.com:Cloudlock/csf-cxf.git',),
+    ('git@github.com:Cloudlock/csf-dev-api.git',),
+    ('git@github.com:Cloudlock/csf-e2e.git',),
+    ('git@github.com:Cloudlock/csf-enterprise-api.git',),
+    ('git@github.com:Cloudlock/csf-external-services.git',),
+    ('git@github.com:Cloudlock/csf-metrics.git',),
+    ('git@github.com:Cloudlock/csf-platform-airwatch.git',),
+    ('git@github.com:Cloudlock/csf-platform-aws.git',),
+    ('git@github.com:Cloudlock/csf-platform-box.git',),
+    ('git@github.com:Cloudlock/csf-platform-dropbox.git',),
+    ('git@github.com:Cloudlock/csf-platform-google.git',),
+    ('git@github.com:Cloudlock/csf-platform-office365.git',),
+    ('git@github.com:Cloudlock/csf-platform-okta.git',),
+    ('git@github.com:Cloudlock/csf-platform-onelogin.git',),
+    ('git@github.com:Cloudlock/csf-platform-opendns.git',),
+    ('git@github.com:Cloudlock/csf-platform-salesforce.git',),
+    ('git@github.com:Cloudlock/csf-platform-servicenow.git',),
+    ('git@github.com:Cloudlock/csf-platform-slack.git',),
+    ('git@github.com:Cloudlock/csf-platform-spark.git',),
+    ('git@github.com:Cloudlock/csf-platform-vm.git',),
+    ('git@github.com:Cloudlock/csf-policy-service.git',),
+    ('git@github.com:Cloudlock/csf-services.git',),
+    ('git@github.com:Cloudlock/csf-threat.git',),
+    ('git@github.com:Cloudlock/csf-uba.git',),
+    ('git@github.com:Cloudlock/csf-user.git',),
+    ('git@github.com:Cloudlock/csf-webapp.git',),
+    ('git@github.com:Cloudlock/director.git',),
+    ('git@github.com:Cloudlock/event-pipeline-client.git',),
+    ('git@github.com:Cloudlock/event-pipeline-consumer.git',),
+    ('git@github.com:Cloudlock/fedramp-automation.git',),
+    ('git@github.com:Cloudlock/gatekeeper.git',),
+    ('git@github.com:Cloudlock/keyserver-proxy.git',),
+    ('git@github.com:Cloudlock/platform-admin.git',),
+    ('git@github.com:Cloudlock/platform-core.git',),
+    ('git@github.com:Cloudlock/platform-ops.git',),
+    ('git@github.com:Cloudlock/selective-encryption.git',),
+    ('git@github.com:Cloudlock/svc-incidents.git',),
+    ('git@github.com:Cloudlock/svc-metrics.git',),
+    ('git@github.com:Cloudlock/svc-workflows.git',),
+]
+
+
+def reponame(repo_url):
+    return os.path.splitext(os.path.basename(repo_url))[0]
+
+
+def run(cmd, **kwargs):
+    p = Popen(cmd, **kwargs)
+    p.wait()
+    if p.returncode != 0:
+        raise RuntimeError('Command failed')
+
+
+def capture_run(cmd, **kwargs):
+    p = Popen(cmd, stdout=PIPE, **kwargs)
+    stdout_data, _ = p.communicate()
+    if p.returncode != 0:
+        raise RuntimeError('Command failed')
+    return stdout_data
+
+
+def git_clone(repo_url, dest_dir):
+    os.mkdir(dest_dir)
+    run(['git', 'clone', repo_url, dest_dir])
+
+
+def git_pull(repo_dir):
+    print("Updating {}...".format(repo_dir))
+    run(['git', 'pull', '--recurse-submodules=yes'], cwd=repo_dir)
+    run(['git', 'submodule', 'update'], cwd=repo_dir)
+
+
+def git_status(repo_dir):
+    cmd_out = StringIO(capture_run(['git', 'status', '--branch', '-s', '--porcelain'],
+        cwd=repo_dir).decode('UTF-8'))
+    result = {
+        'branch_name': '???',
+        'changes': []
+    }
+    for line in cmd_out:
+        line = line.rstrip()
+        if line.startswith('## '):
+            branches = line[3:].split('...')
+            result['branch_name'] = branches[0]
+            if len(branches) > 1:
+                result['upstream_branch_name'] = branches[1]
+        elif line.startswith('?? '):
+            pass  # skip unknown files
+        else:
+            result['changes'].append({
+                'file_name': line[3:],
+                'status': line[0:2],
+            })
+    return result
+
+
+def cmd_update(args):
+    for repo_url, in REPO_URLS:
+        local_dir = os.path.join(args.src_dir, reponame(repo_url))
+        if not os.path.isdir(local_dir):
+            git_clone(repo_url, local_dir)
+        else:
+            git_pull(local_dir)
+
+
+def cmd_status(args):
+    for repo_url, in REPO_URLS:
+        repo_name = reponame(repo_url)
+        repo_path = os.path.join(args.src_dir, repo_name)
+        if os.path.isdir(repo_path):
+            status = git_status(repo_path)
+            print("{:30}  <{}>".format(repo_name, status['branch_name']))
+            for change in status['changes']:
+                print("  {status} {file_name}".format(**change))
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--src-dir', default=os.path.join(os.environ['HOME'], 'src'),
+        help='Directory where git repos will be stored')
+    parser.add_argument('cmd', help='Command to run')
+    args = parser.parse_args()
+
+    if args.cmd == 'update':
+        cmd_update(args)
+    elif args.cmd == 'status':
+        cmd_status(args)
+    else:
+        print("Unknown command: {}".format(args.cmd))
+
+
+if __name__ == '__main__':
+    main()
