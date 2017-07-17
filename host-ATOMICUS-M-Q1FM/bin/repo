@@ -76,6 +76,8 @@ def capture_run(cmd, **kwargs):
 def git_clone(repo_url, dest_dir):
     os.mkdir(dest_dir)
     run(['git', 'clone', repo_url, dest_dir])
+    run(['git', 'submodule', 'init'], cwd=dest_dir)
+    run(['git', 'submodule', 'update'], cwd=dest_dir)
 
 
 def git_pull(repo_dir):
