@@ -6,56 +6,62 @@ from io import StringIO
 from subprocess import check_call, Popen, PIPE
 
 
-REPO_URLS = [
-    ('git@github.com:Cloudlock/ccs-client-library.git',),
-    ('git@github.com:Cloudlock/continuous-integration.git',),
-    ('git@github.com:Cloudlock/csf-afw.git',),
-    ('git@github.com:Cloudlock/csf-api.git',),
-    ('git@github.com:Cloudlock/csf-ctr.git',),
-    ('git@github.com:Cloudlock/csf-cxf.git',),
-    ('git@github.com:Cloudlock/csf-dev-api.git',),
-    ('git@github.com:Cloudlock/csf-e2e.git',),
-    ('git@github.com:Cloudlock/csf-enterprise-api.git',),
-    ('git@github.com:Cloudlock/csf-external-services.git',),
-    ('git@github.com:Cloudlock/csf-metrics.git',),
-    ('git@github.com:Cloudlock/csf-platform-airwatch.git',),
-    ('git@github.com:Cloudlock/csf-platform-aws.git',),
-    ('git@github.com:Cloudlock/csf-platform-box.git',),
-    ('git@github.com:Cloudlock/csf-platform-dropbox.git',),
-    ('git@github.com:Cloudlock/csf-platform-google.git',),
-    ('git@github.com:Cloudlock/csf-platform-office365.git',),
-    ('git@github.com:Cloudlock/csf-platform-okta.git',),
-    ('git@github.com:Cloudlock/csf-platform-onelogin.git',),
-    ('git@github.com:Cloudlock/csf-platform-opendns.git',),
-    ('git@github.com:Cloudlock/csf-platform-salesforce.git',),
-    ('git@github.com:Cloudlock/csf-platform-servicenow.git',),
-    ('git@github.com:Cloudlock/csf-platform-slack.git',),
-    ('git@github.com:Cloudlock/csf-platform-spark.git',),
-    ('git@github.com:Cloudlock/csf-platform-vm.git',),
-    ('git@github.com:Cloudlock/csf-policy-service.git',),
-    ('git@github.com:Cloudlock/csf-services.git',),
-    ('git@github.com:Cloudlock/csf-threat.git',),
-    ('git@github.com:Cloudlock/csf-uba.git',),
-    ('git@github.com:Cloudlock/csf-user.git',),
-    ('git@github.com:Cloudlock/csf-webapp.git',),
-    ('git@github.com:Cloudlock/director.git',),
-    ('git@github.com:Cloudlock/event-pipeline-client.git',),
-    ('git@github.com:Cloudlock/event-pipeline-consumer.git',),
-    ('git@github.com:Cloudlock/fedramp-automation.git',),
-    ('git@github.com:Cloudlock/gatekeeper.git',),
-    ('git@github.com:Cloudlock/keyserver-proxy.git',),
-    ('git@github.com:Cloudlock/platform-admin.git',),
-    ('git@github.com:Cloudlock/platform-core.git',),
-    ('git@github.com:Cloudlock/platform-ops.git',),
-    ('git@github.com:Cloudlock/selective-encryption.git',),
-    ('git@github.com:Cloudlock/svc-incidents.git',),
-    ('git@github.com:Cloudlock/svc-metrics.git',),
-    ('git@github.com:Cloudlock/svc-workflows.git',),
+class Repo(object):
+    def __init__(self, url=None, trunk=None):
+        self.url = url
+        self.trunk = trunk
+
+    @property
+    def name(self):
+        return os.path.splitext(os.path.basename(self.url))[0]
+
+
+REPOS = [
+    Repo(url='git@github.com:Cloudlock/ccs-client-library.git', trunk='master'),
+    Repo(url='git@github.com:Cloudlock/continuous-integration.git', trunk='master'),
+    Repo(url='git@github.com:Cloudlock/csf-afw.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-api.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-ctr.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-cxf.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-dev-api.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-e2e.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-enterprise-api.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-external-services.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-metrics.git', trunk='master'),
+    Repo(url='git@github.com:Cloudlock/csf-platform-airwatch.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-platform-aws.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-platform-box.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-platform-dropbox.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-platform-google.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-platform-office365.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-platform-okta.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-platform-onelogin.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-platform-opendns.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-platform-salesforce.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-platform-servicenow.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-platform-slack.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-platform-spark.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-platform-vm.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-policy-service.git', trunk='master'),
+    Repo(url='git@github.com:Cloudlock/csf-services.git', trunk='master'),
+    Repo(url='git@github.com:Cloudlock/csf-threat.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-uba.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-user.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/csf-webapp.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/director.git', trunk='master'),
+    Repo(url='git@github.com:Cloudlock/event-pipeline-client.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/event-pipeline-consumer.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/fedramp-automation.git', trunk='master'),
+    Repo(url='git@github.com:Cloudlock/gatekeeper.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/keyserver-proxy.git', trunk='master'),
+    Repo(url='git@github.com:Cloudlock/platform-admin.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/platform-core.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/platform-ops.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/selective-encryption.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/svc-incidents.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/svc-metrics.git', trunk='develop'),
+    Repo(url='git@github.com:Cloudlock/svc-workflows.git', trunk='develop'),
 ]
-
-
-def reponame(repo_url):
-    return os.path.splitext(os.path.basename(repo_url))[0]
 
 
 def run(cmd, **kwargs):
@@ -111,17 +117,17 @@ def git_status(repo_dir):
 
 
 def cmd_update(args):
-    for repo_url, in REPO_URLS:
-        local_dir = os.path.join(args.src_dir, reponame(repo_url))
+    for repo in REPOS:
+        local_dir = os.path.join(args.src_dir, repo.name)
         if not os.path.isdir(local_dir):
-            git_clone(repo_url, local_dir)
+            git_clone(repo.url, local_dir)
         else:
             git_pull(local_dir)
 
 
 def cmd_status(args):
-    for repo_url, in REPO_URLS:
-        repo_name = reponame(repo_url)
+    for repo in REPOS:
+        repo_name = repo.name
         repo_path = os.path.join(args.src_dir, repo_name)
         if os.path.isdir(repo_path):
             status = git_status(repo_path)
