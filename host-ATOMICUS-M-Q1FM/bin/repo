@@ -28,7 +28,6 @@ REPOS = [
     Repo(url='git@github.com:Cloudlock/csf-enterprise-api.git', trunk='develop'),
     Repo(url='git@github.com:Cloudlock/csf-external-services.git', trunk='develop'),
     Repo(url='git@github.com:Cloudlock/csf-metrics.git', trunk='master'),
-    Repo(url='git@github.com:Cloudlock/csf-platform-airwatch.git', trunk='develop'),
     Repo(url='git@github.com:Cloudlock/csf-platform-aws.git', trunk='develop'),
     Repo(url='git@github.com:Cloudlock/csf-platform-box.git', trunk='develop'),
     Repo(url='git@github.com:Cloudlock/csf-platform-dropbox.git', trunk='develop'),
@@ -79,6 +78,12 @@ def capture_run(cmd, **kwargs):
     return stdout_data
 
 
+def git_fetch(repo_dir):
+    print("Fetching {}...".format(repo_dir))
+    run(['git', 'fetch', '--all'], cwd=repo_dir)
+    run(['git', 'submodule', 'foreach', '--recursive', 'git fetch --all'], cwd=repo_dir)
+
+
 def git_clone(repo_url, dest_dir):
     os.mkdir(dest_dir)
     run(['git', 'clone', repo_url, dest_dir])
@@ -116,8 +121,19 @@ def git_status(repo_dir):
     return result
 
 
+def selected_repos(args):
+    # TODO add filtering based on command line args
+    return REPOS
+
+
+def cmd_fetch(args):
+    for repo in selected_repos(args):
+        local_dir = os.path.join(args.src_dir, repo.name)
+        git_fetch(local_dir)
+
+
 def cmd_update(args):
-    for repo in REPOS:
+    for repo in selected_repos(args):
         local_dir = os.path.join(args.src_dir, repo.name)
         if not os.path.isdir(local_dir):
             git_clone(repo.url, local_dir)
@@ -126,7 +142,7 @@ def cmd_update(args):
 
 
 def cmd_status(args):
-    for repo in REPOS:
+    for repo in selected_repos(args):
         repo_name = repo.name
         repo_path = os.path.join(args.src_dir, repo_name)
         if os.path.isdir(repo_path):
@@ -136,19 +152,34 @@ def cmd_status(args):
                 print("  {status} {file_name}".format(**change))
 
 
-def main():
-    parser = argparse.ArgumentParser()
+def parse_args():
+    parser = argparse.ArgumentParser(description='Helper for managing many repos')
     parser.add_argument('--src-dir', default=os.path.join(os.environ['HOME'], 'src'),
         help='Directory where git repos will be stored')
-    parser.add_argument('cmd', help='Command to run')
-    args = parser.parse_args()
 
-    if args.cmd == 'update':
-        cmd_update(args)
-    elif args.cmd == 'status':
-        cmd_status(args)
-    else:
-        print("Unknown command: {}".format(args.cmd))
+    subparsers = parser.add_subparsers(help='sub-command help')
+
+    # create the parser for the "fetch" subcommand
+    parser_fetch = subparsers.add_parser('fetch',
+        help='fetch contents from repo remotes')
+    parser_fetch.set_defaults(func=cmd_fetch)
+
+    # create the parser for the "status" subcommand
+    parser_status = subparsers.add_parser('status',
+        help='show the status of repos')
+    parser_status.set_defaults(func=cmd_status)
+
+    # create the parser for the "update" subcommand
+    parser_update = subparsers.add_parser('update',
+        help='update the local repos from the origin')
+    parser_update.set_defaults(func=cmd_update)
+
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+    args.func(args)
 
 
 if __name__ == '__main__':
