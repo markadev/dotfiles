@@ -1,0 +1,39 @@
+#!/bin/sh
+
+set -e
+
+if [ $# -lt 2 ]; then
+    echo "Usage: $0 MAJOR_MINOR RELEASE" 1>&2
+    exit 1
+fi
+
+MAJOR_MINOR="$1"
+RELEASE="$2"
+
+DOT_COUNT=`echo "${MAJOR_MINOR}" |grep -o "\." |wc -l`
+if [ "${DOT_COUNT}" -ne "1" ]; then
+    echo "MAJOR_MINOR version is expected to have 1 dot, like '1.97'"
+    exit 1
+fi
+
+TRUNK_BRANCH="origin/develop"
+TAG_NAME="${MAJOR_MINOR}.0"
+RELEASE_BRANCH="releases/${MAJOR_MINOR}.x"
+
+echo "TRUNK_BRANCH=${TRUNK_BRANCH}"
+echo "TAG_NAME=${TAG_NAME}"
+echo "RELEASE_BRANCH=${RELEASE_BRANCH}"
+
+set -x
+
+(set +x; echo "Fetching latest changes...") 2>/dev/null
+git fetch
+
+(set +x; echo "Creating signed tag ${TAG_NAME} on ${TRUNK_BRANCH}") 2>/dev/null
+git tag -s -a "${TAG_NAME}" -m "Release ${RELEASE}" "${TRUNK_BRANCH}"
+
+# Push up the tag and a new release branch based off the tag.
+# https://stackoverflow.com/questions/4061481/how-do-you-push-a-git-tag-to-a-branch-using-a-refspec
+# explains why the refspec for the branch is so complicated.
+(set +x; echo "Pushing everything up...") 2>/dev/null
+git push origin "${TAG_NAME}" "${TAG_NAME}^{commit}:refs/heads/${RELEASE_BRANCH}"
