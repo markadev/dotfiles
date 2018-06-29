@@ -1,19 +1,19 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # A simple hex dump program
 
-from __future__ import unicode_literals
 import argparse
 import sys
+from itertools import chain
 
 
-byte_to_ascii = '................................' + \
-                ' !"#$%&\'()*+,-./0123456789:;<=>?' + \
-                '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_' + \
-                '`abcdefghijklmnopqrstuvwxyz{|}~.' + \
-                '................................' + \
-                '................................' + \
-                '................................' + \
-                '................................'
+byte_to_ascii = b'................................' \
+                b' !"#$%&\'()*+,-./0123456789:;<=>?' \
+                b'@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_' \
+                b'`abcdefghijklmnopqrstuvwxyz{|}~.' \
+                b'................................' \
+                b'................................' \
+                b'................................' \
+                b'................................'
 
 
 def hexdump(fp, args):
@@ -23,26 +23,29 @@ def hexdump(fp, args):
         rawdata_len = len(rawdata)
         if rawdata_len == 0:
             break
-        for i in xrange(0, rawdata_len, 16):
+        for i in range(0, rawdata_len, 16):
             hexdump_line(offset + i, rawdata[i:i+16], args)
         offset += rawdata_len
 
 
 def hexdump_line(offset, data, args):
+    fields = []
     if args.display_offset:
-        line = "%06x: " % offset
-    else:
-        line = ""
+        fields.append("{:08x}:".format(offset))
 
     if args.display_hex_data:
-        formatted_bytes = ["{:02x}".format(ord(b)) for b in data]
-        formatted_bytes += ['  ' for _ in xrange(len(data), 16)]
-        line += ' '.join(formatted_bytes)
+        hex_data_str = ' '.join(chain(
+            ("{:02x}".format(b) for b in data),
+            ('  ' for _ in range(16 - len(data)))
+        ))
+        fields.append(hex_data_str)
 
     if args.display_ascii_data:
-        line += "  <" + data.translate(byte_to_ascii) + ">"
+        ascii_str = " <{}>".format(data.translate(
+            byte_to_ascii).decode('ascii'))
+        fields.append(ascii_str)
 
-    print(line)
+    print(' '.join(fields))
 
 
 def parse_args():
