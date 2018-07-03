@@ -22,7 +22,6 @@ REPOS = [
     Repo(url='git@github.com:Cloudlock/csf-afw.git', trunk='develop'),
     Repo(url='git@github.com:Cloudlock/csf-api.git', trunk='develop'),
     Repo(url='git@github.com:Cloudlock/csf-ctr.git', trunk='develop'),
-    Repo(url='git@github.com:Cloudlock/csf-cxf.git', trunk='develop'),
     Repo(url='git@github.com:Cloudlock/csf-dev-api.git', trunk='develop'),
     Repo(url='git@github.com:Cloudlock/csf-e2e.git', trunk='develop'),
     Repo(url='git@github.com:Cloudlock/csf-enterprise-api.git', trunk='develop'),
