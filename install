@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from __future__ import unicode_literals
-import argparse, logging, os, pkg_resources
+import argparse, logging, os, pkg_resources, sys
 
 
 DEFAULT_ROLES = ['base', 'bc']
@@ -25,7 +25,7 @@ def main():
         home_dir = os.environ['HOME'].rstrip('/')
     except KeyError:
         logger.error("'HOME' environment variable is not set")
-        raise SystemExit(2)
+        sys.exit(2)
     logger.debug("home_dir=%s", home_dir)
 
     try:
@@ -33,7 +33,7 @@ def main():
         dotfile_basepath = os.path.abspath(dotfile_basepath or '.')
     except:
         logger.exception("Unable to determine script directory")
-        raise SystemExit(2)
+        sys.exit(2)
     logger.debug("dotfile_basepath=%s", dotfile_basepath)
 
     roles = args.role
@@ -48,10 +48,10 @@ def main():
         prune_links(home_dir, dotfile_basepath)
     except OSError as e:
         logger.error(e.strerror)
-        raise SystemExit(3)
+        sys.exit(3)
     except Exception as e:
-        logger.error(e.message)
-        raise SystemExit(3)
+        logger.error(str(e))
+        sys.exit(3)
     logger.info("Done!")
 
 
@@ -66,7 +66,7 @@ def safe_mkdir(path):
             os.mkdir(path)
     except Exception as e:
         raise RuntimeError("Could not create directory '{}': {}".format(
-            path, e.message))
+            path, e))
 
 
 def safe_symlink(src, dest):
@@ -85,7 +85,7 @@ def safe_symlink(src, dest):
         os.symlink(src, dest)
     except Exception as e:
         raise RuntimeError("Could not create symlink '{}': {}".format(
-            dest, e.message))
+            dest, e))
 
 
 def safe_remove_symlink(path):
