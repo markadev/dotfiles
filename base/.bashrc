@@ -9,7 +9,7 @@
 [ -z "${PS1}" ] && return
 
 # Command aliases
-alias bgrep="grep --exclude='*.[ado]' --exclude='*.pyc' --exclude='tags' --exclude-dir='.svn' --exclude-dir='.git'"
+alias bgrep="grep --exclude='*.[ado]' --exclude='*.pyc' --exclude='*.class' --exclude='*.jar' --exclude='tags' --exclude-dir='.svn' --exclude-dir='.git'"
 alias nohist="export HISTFILE=/dev/null"
 
 complete -d cd pushd
