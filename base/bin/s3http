@@ -125,7 +125,7 @@ def make_request(method, endpoint, headers=None, data=None, secret_key=None, acc
 
 
 def main():
-    warnings.filterwarnings('ignore', module='urllib3\.connectionpool')
+    warnings.filterwarnings('ignore', module='urllib3.connectionpool')
     try:
         args = parse_args()
         logging.basicConfig(format="%(message)s",
