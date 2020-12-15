@@ -9,8 +9,11 @@ import os
 import sys
 import warnings
 from datetime import datetime
-from urllib import quote
-from urlparse import parse_qsl, urlparse
+if sys.version_info.major == 2:
+    from urllib import quote
+    from urlparse import parse_qsl, urlparse
+else:
+    from urllib.parse import parse_qsl, quote, urlparse
 
 import requests
 
@@ -54,10 +57,18 @@ def make_request(method, endpoint, headers=None, data=None, secret_key=None, acc
     amz_date = t.strftime('%Y%m%dT%H%M%SZ')
     date_stamp = t.strftime('%Y%m%d')  # Date w/o time, used in credential scope
 
+    payload_hash = hashlib.sha256(data or b'').hexdigest()
+
+    headers.update({
+        'Host': url.netloc,
+        'X-Amz-Date': amz_date,
+        'X-Amz-Content-SHA256': payload_hash,
+    })
+    if data is not None:
+        headers['Content-MD5'] = base64.b64encode(hashlib.md5(data).digest()).decode('utf-8')
+
     # ************* TASK 1: CREATE A CANONICAL REQUEST *************
     # http://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
-
-    payload_hash = hashlib.sha256(data or b'').hexdigest()
 
     canonical_uri = url.path or '/'
     canonical_querystring = '&'.join("{}={}".format(quote(kv[0]), quote(kv[1]))
@@ -66,10 +77,8 @@ def make_request(method, endpoint, headers=None, data=None, secret_key=None, acc
     # Step 4: Create the canonical headers. Header names must be trimmed
     # and lowercase, and sorted in code point order from low to high.
     # Note that there is a trailing \n.
-    canonical_headers = 'host:' + url.netloc + '\n' + \
-        'x-amz-content-sha256:' + payload_hash + '\n' + \
-        'x-amz-date:' + amz_date + '\n'
-    signed_headers = 'host;x-amz-content-sha256;x-amz-date'
+    canonical_headers = '\n'.join("{}:{}".format(k.strip().lower(), v) for k,v in sorted(headers.items())) + '\n'
+    signed_headers = ';'.join(k.lower() for k in sorted(headers.keys()))
 
     canonical_request = '\n'.join(
         (method, canonical_uri, canonical_querystring, canonical_headers, signed_headers, payload_hash))
@@ -99,14 +108,9 @@ def make_request(method, endpoint, headers=None, data=None, secret_key=None, acc
         'SignedHeaders=' + signed_headers + ', ' + \
         'Signature=' + signature
 
-    # Note: The 'host' header will be added automatically by the HTTP library
     headers.update({
         'Authorization': authorization_header,
-        'X-Amz-Date': amz_date,
-        'X-Amz-Content-SHA256': payload_hash,
     })
-    if data is not None:
-        headers['Content-MD5'] = base64.b64encode(hashlib.md5(data).digest()).decode('utf-8')
 
     # ************* SEND THE REQUEST *************
     logger.info("* --- REQUEST ---")
@@ -144,7 +148,7 @@ def main():
         data = None
         if args.data:
             if args.data == '@-':
-                data = sys.stdin.read()
+                data = sys.stdin.read().encode('utf-8')
             elif args.data.startswith('@'):
                 with open(args.data[1:], 'rb') as fp:
                     data = fp.read()
@@ -153,7 +157,7 @@ def main():
 
         rsp = make_request(args.method, args.url[0], headers=headers, data=data,
                            access_key=access_key, secret_key=secret_key, noverify=args.noverify)
-        sys.stdout.write(rsp.content)
+        sys.stdout.write(rsp.text)
     except KeyboardInterrupt:
         logger.error("interrupted!")
         sys.exit(2)
