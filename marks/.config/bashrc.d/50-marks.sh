@@ -1,5 +1,10 @@
 MARK_STORAGE_DIR="${CONFIG}/marks"
 
+_marks_find="find"
+if [ $(uname) = "Darwin" ]; then
+	_marks_find="gfind"
+fi
+
 # Bookmark a directory
 mark() {
 	if [ $# -lt 1 ]; then
@@ -33,13 +38,7 @@ unmark() {
 # List bookmarked directories
 marks() {
 	if [ -d "${MARK_STORAGE_DIR}" ]; then
-		local M
-		for M in $(ls ${MARK_STORAGE_DIR}); do
-			if test -L "${MARK_STORAGE_DIR}/$M"; then
-				local D=$(readlink "${MARK_STORAGE_DIR}/$M")
-				echo "$M -> $D"
-			fi
-		done
+		${_marks_find} "${MARK_STORAGE_DIR}" -type l -printf "%f -> %l\n"
 	fi
 }
 
@@ -53,7 +52,7 @@ mcd() {
 		return 1
 	fi
 
-	local P=$(find "${MARK_STORAGE_DIR}/$1" -type l -printf "%l" 2>/dev/null)
+	local P=$(readlink "${MARK_STORAGE_DIR}/$1" 2>/dev/null)
 	if [ -z "${P}" ]; then
 		echo "Error: No mark named '$1'"
 		return 1
@@ -72,7 +71,7 @@ mpushd() {
 		return 1
 	fi
 
-	local P=$(find "${MARK_STORAGE_DIR}/$1" -type l -printf "%l" 2>/dev/null)
+	local P=$(readlink "${MARK_STORAGE_DIR}/$1" 2>/dev/null)
 	if [ -z "${P}" ]; then
 		echo "Error: No mark named '$1'"
 		return 1
@@ -83,7 +82,7 @@ mpushd() {
 # Name completion for mark names
 _markname_complete() {
 	if [ ${COMP_CWORD} -lt 2 ]; then
-		COMPREPLY=($(find "${MARK_STORAGE_DIR}" -type l -name "$2*" -printf "%f\n" 2>/dev/null))
+		COMPREPLY=($(${_marks_find} "${MARK_STORAGE_DIR}" -type l -name "$2*" -printf "%f\n" 2>/dev/null))
 	fi
 }
 complete -F _markname_complete mcd mpushd unmark
