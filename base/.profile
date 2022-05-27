@@ -24,7 +24,7 @@ esac
 
 export PATH="${HOME}/bin:${PATH}"
 
-if [ "${PS1}" -a "${BASH_VERSION}" ]; then
+if [ "${PS1}" -a "${BASH_VERSION}" -a -z "${BASHRC_SOURCED}" ]; then
 	# We're running an interactive bash shell
 	. ${HOME}/.bashrc
 fi
